@@ -14,6 +14,10 @@
   <dependencies>
     <dependency>
       <groupId>org.nuxeo.orbeon</groupId>
+      <artifactId>nuxeo-orbeon-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.nuxeo.orbeon</groupId>
       <artifactId>nuxeo-orbeon-rest</artifactId>
     </dependency>
   </dependencies>

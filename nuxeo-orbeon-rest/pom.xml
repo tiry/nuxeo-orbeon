@@ -15,6 +15,11 @@
   <dependencies>
 
     <dependency>
+      <groupId>org.nuxeo.orbeon</groupId>
+      <artifactId>nuxeo-orbeon-core</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.nuxeo.ecm.webengine</groupId>
       <artifactId>nuxeo-webengine-core</artifactId>
     </dependency>
@@ -30,9 +35,12 @@
       <artifactId>jersey-core</artifactId>
     </dependency>
 
+    <dependency>
+     <groupId>javax.servlet</groupId>
+     <artifactId>javax.servlet-api</artifactId>
+    </dependency>
 
-      <!-- Test -->
-      <!-- Test -->
+    <!-- Test -->
     <dependency>
       <groupId>org.nuxeo.ecm.routing</groupId>
       <artifactId>nuxeo-routing-core</artifactId>

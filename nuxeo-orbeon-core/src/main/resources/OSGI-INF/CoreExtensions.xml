@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.orbeon.CoreExtensions" version="1.0">
+
+	<extension target="org.nuxeo.ecm.core.schema.TypeService"
+		point="schema">
+
+		<schema name="orbeon" prefix="ob" src="schema/orbeon.xsd" />
+
+	</extension>
+
+	<extension target="org.nuxeo.ecm.core.schema.TypeService"
+		point="doctype">
+
+		<facet name="orbeon">
+			<schema name="orbeon" />
+		</facet>
+
+	</extension>
+
+</component>

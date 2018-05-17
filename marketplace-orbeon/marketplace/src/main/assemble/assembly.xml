@@ -22,6 +22,7 @@
     <copy todir="${outdir}/marketplace/install/bundles">
       <!-- Your bundles -->
       <artifact:file key="org.nuxeo.orbeon:nuxeo-orbeon-rest" />
+      <artifact:file key="org.nuxeo.orbeon:nuxeo-orbeon-core" />
     </copy>
 
     <!--

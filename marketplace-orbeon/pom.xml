@@ -34,6 +34,11 @@
     <dependencies>
       <dependency>
         <groupId>org.nuxeo.orbeon</groupId>
+        <artifactId>nuxeo-orbeon-core</artifactId>
+        <version>${graphql.version}</version>        
+      </dependency>
+      <dependency>
+        <groupId>org.nuxeo.orbeon</groupId>
         <artifactId>nuxeo-orbeon-rest</artifactId>
         <version>${graphql.version}</version>        
       </dependency>

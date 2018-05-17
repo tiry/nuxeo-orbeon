@@ -16,6 +16,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>nuxeo-orbeon-core</module>
     <module>nuxeo-orbeon-rest</module>
     <module>marketplace-orbeon</module>
   </modules>
@@ -23,13 +24,16 @@
   <dependencyManagement>
     <dependencies>
 
-
+      <dependency>
+        <groupId>org.nuxeo.orbeon</groupId>
+        <artifactId>nuxeo-orbeon-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.nuxeo.orbeon</groupId>
         <artifactId>nuxeo-orbeon-rest</artifactId>
         <version>${project.version}</version>
       </dependency>
-
 
     </dependencies>
   </dependencyManagement>
