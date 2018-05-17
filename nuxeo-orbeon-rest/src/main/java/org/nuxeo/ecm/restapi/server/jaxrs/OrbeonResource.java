@@ -111,7 +111,9 @@ public class OrbeonResource extends DefaultObject {
 			public void run() {
 				
 				forms=session.query("select * from File where ob:app='" + app + "' and ob:formName='" + form + "'");
-				
+				for (DocumentModel doc:forms) {
+					doc.detach(true);
+				}
 			}
 		}
 		UnrestrictedSessionSearch fetcher = new UnrestrictedSessionSearch(getRepositoryName());		
@@ -119,6 +121,8 @@ public class OrbeonResource extends DefaultObject {
 		Template template = new Template(ctx,"obsearch.ftl");
 		Map<String, Object> args = new HashMap<>();
 		args.put("forms", fetcher.forms);
+		args.put("app", app);
+		
 		template.args(args);
 
 		return template;		
