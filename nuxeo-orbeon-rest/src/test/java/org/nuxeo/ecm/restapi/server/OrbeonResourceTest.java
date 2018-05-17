@@ -37,20 +37,22 @@ public class OrbeonResourceTest extends BaseTest{
     private WebResource resource;
     
     @Test
-    public void shouldCreateForm() throws Exception {
+    public void shouldCreateAndReadForm() throws Exception {
 
     	resource = getServiceFor(REST_API_URL, "Administrator", "Administrator");
     	
+    	final String obXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><form xmlns:fr=\"http://orbeon.org/oxf/xml/form-runner\" fr:data-format-version=\"4.0.0\">\n" + 
+        		"                    <dublincore-section>\n" + 
+        		"                        <title>test</title>\n" + 
+        		"                        <description>tets</description>\n" + 
+        		"                    </dublincore-section>\n" + 
+        		"                    <Note-section>\n" + 
+        		"                        <note>etetet</note>\n" + 
+        		"                    </Note-section>\n" + 
+        		"</form>";
+    	
     	ClientResponse response = resource.path("orbeon/crud/Nuxeo/SimpleForm/data/f53a2d0041e53f4ebef826c7341d7c500d26e77b/data.xml")
-                .entity("<?xml version=\"1.0\" encoding=\"UTF-8\"?><form xmlns:fr=\"http://orbeon.org/oxf/xml/form-runner\" fr:data-format-version=\"4.0.0\">\n" + 
-                		"                    <dublincore-section>\n" + 
-                		"                        <title>test</title>\n" + 
-                		"                        <description>tets</description>\n" + 
-                		"                    </dublincore-section>\n" + 
-                		"                    <Note-section>\n" + 
-                		"                        <note>etetet</note>\n" + 
-                		"                    </Note-section>\n" + 
-                		"</form>")                          
+                .entity(obXML)                          
     			.put(ClientResponse.class);
 
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
@@ -60,7 +62,13 @@ public class OrbeonResourceTest extends BaseTest{
         for (DocumentModel doc:docs) {
         	System.out.println(doc.getPathAsString() + "(" + doc.getType()+ ")");
         }        
+        
+        response = resource.path("orbeon/crud/Nuxeo/SimpleForm/data/f53a2d0041e53f4ebef826c7341d7c500d26e77b/data.xml")                          
+    			.get(ClientResponse.class);
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String xml = response.getEntity(String.class);
+        assertEquals(xml, obXML);
+        
     }
-
 
 }

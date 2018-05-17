@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentRef;
@@ -33,11 +34,30 @@ public class OrbeonResource extends DefaultObject {
 	protected static final Log log = LogFactory.getLog(OrbeonResource.class);
 
 	@GET
-	@Path("crud/{app}/{form}/{id}/data.xml")
+	@Path("crud/{app}/{form}/data/{id}/data.xml")
 	public Object getFormData(@PathParam("app") String app, @PathParam("form") String form,
 			@PathParam("id") String id) {
 
-		return "OK";
+		//XXX Hack to bypass security
+		class UnrestrictedSessionFetcher extends UnrestrictedSessionRunner {
+			
+			protected String orbeonXML;
+			
+			public UnrestrictedSessionFetcher(String repository) {
+				super(repository);
+			}			
+			@Override
+			public void run() {
+				DocumentModel formDoc = getOrCreateFormDoc(session, app, form, id, false);
+				orbeonXML = mapNuxeoDocumentToOrbeonData(formDoc);
+				session.save();
+			}
+		}
+		UnrestrictedSessionFetcher fetcher = new UnrestrictedSessionFetcher(getRepositoryName());		
+		fetcher.runUnrestricted();
+
+		return Response.status(Status.OK).entity(fetcher.orbeonXML).build();
+
 	}
 
 	@PUT
@@ -45,10 +65,11 @@ public class OrbeonResource extends DefaultObject {
 	public Response createUpdateFormData(@PathParam("app") String app, @PathParam("form") String form,
 			@PathParam("id") String id) throws Exception {
 
+		//XXX Hack to bypass security
 		new UnrestrictedSessionRunner(getRepositoryName()) {
 			@Override
 			public void run() {
-				DocumentModel formDoc = getOrCreateFormDoc(session, app, form, id);
+				DocumentModel formDoc = getOrCreateFormDoc(session, app, form, id, true);
 
 				String orbeonXML = null;
 				try {
@@ -63,7 +84,7 @@ public class OrbeonResource extends DefaultObject {
 				formDoc = mapOrbeonDataToNuxeoDocument(formDoc, orbeonXML);
 				session.save();
 			}
-		}.runUnrestricted();		
+		}.runUnrestricted();
 		return Response.status(Status.CREATED).build();
 	}
 
@@ -82,9 +103,20 @@ public class OrbeonResource extends DefaultObject {
 		return formDoc.getCoreSession().saveDocument(formDoc);
 	}
 
-	protected DocumentModel getOrCreateAppRoot(CoreSession session, String app) {
+	protected String mapNuxeoDocumentToOrbeonData(DocumentModel formDoc) {
+
+		Blob blob = (Blob) formDoc.getPropertyValue("file:content");	
+		try {
+			return blob.getString();
+		} catch (Exception e) {
+			log.error("Unable to read Orbeon data from blob", e);
+			return "";
+		}
+	}
+
+	protected DocumentModel getOrCreateAppRoot(CoreSession session, String app, boolean create) {
 		DocumentRef ref = new PathRef("/" + app);
-		if (!session.exists(ref)) {
+		if (!session.exists(ref) && create) {
 			DocumentModel doc = session.createDocumentModel("/", app, "Workspace");
 			doc.setPropertyValue("dc:title", app);
 			doc.addFacet("orbeon");
@@ -95,18 +127,18 @@ public class OrbeonResource extends DefaultObject {
 		return session.getDocument(ref);
 	}
 
-	protected DocumentModel getOrCreateFormRoot(CoreSession session, String app, String form) {
+	protected DocumentModel getOrCreateFormRoot(CoreSession session, String app, String form, boolean create) {
 
-		DocumentModel appDoc = getOrCreateAppRoot(session, app);
-		DocumentRef ref=null;
-		
+		DocumentModel appDoc = getOrCreateAppRoot(session, app, create);
+		DocumentRef ref = null;
+
 		try {
-			ref= new PathRef(appDoc.getPathAsString() + "/" + form);
+			ref = new PathRef(appDoc.getPathAsString() + "/" + form);
 		} catch (Exception e) {
-			log.error("Unable to create Form Root", e);			
+			log.error("Unable to create Form Root", e);
 		}
 		try {
-			if (!session.exists(ref)) {
+			if (!session.exists(ref) && create) {
 				DocumentModel doc = session.createDocumentModel(appDoc.getPathAsString(), form, "Folder");
 				doc.setPropertyValue("dc:title", form);
 				doc.addFacet("orbeon");
@@ -121,12 +153,13 @@ public class OrbeonResource extends DefaultObject {
 		return session.getDocument(ref);
 	}
 
-	protected DocumentModel getOrCreateFormDoc(CoreSession session, String app, String form, String id) {
+	protected DocumentModel getOrCreateFormDoc(CoreSession session, String app, String form, String id,
+			boolean create) {
 
-		DocumentModel formFolder = getOrCreateFormRoot(session, app, form);
+		DocumentModel formFolder = getOrCreateFormRoot(session, app, form, create);
 
 		DocumentRef ref = new PathRef(formFolder.getPathAsString() + "/" + id);
-		if (!session.exists(ref)) {
+		if (!session.exists(ref) && create) {
 			DocumentModel doc = session.createDocumentModel(formFolder.getPathAsString(), id, "File");
 			doc.setPropertyValue("dc:title", "Orbeon Folder:" + id);
 			doc.addFacet("orbeon");
@@ -137,19 +170,6 @@ public class OrbeonResource extends DefaultObject {
 			session.save();
 		}
 		return session.getDocument(ref);
-	}
-
-	protected DocumentModel createDocument(String app, String form, String id) {
-
-		CoreSession session = ctx.getCoreSession();
-
-		return null;
-	}
-
-	protected DocumentModel resolveDocumentByFormId(String id) {
-		CoreSession session = ctx.getCoreSession();
-
-		return null;
 	}
 
 }
