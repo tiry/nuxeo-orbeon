@@ -118,7 +118,7 @@ public class OrbeonResource extends DefaultObject {
 		}
 		UnrestrictedSessionSearch fetcher = new UnrestrictedSessionSearch(getRepositoryName());		
 		fetcher.runUnrestricted();
-		Template template = new Template(ctx,"obsearch.ftl");
+		Template template = new Template(ctx,"obsearch2.ftl");
 		Map<String, Object> args = new HashMap<>();
 		args.put("forms", fetcher.forms);
 		args.put("app", app);
