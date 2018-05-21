@@ -1,8 +1,8 @@
 <!-- See documentation at http://doc.nuxeo.com/x/HgIz -->
-<package type="addon" name="nuxeo-graphql" version="@VERSION@">
-  <title>Nuxeo GraphQL</title>
+<package type="addon" name="nuxeo-orbeon" version="@VERSION@">
+  <title>Nuxeo Orbeon Storage Provider</title>
   <description>
-    <p>This addons adds a /nuxeo/api/v1/gql endpoint to query the Nuxeo repository in GraphQL</p>
+    <p>This addons adds REST endpoints to implement the storage provider for Orbeon forms.</p>
   </description>
   <home-page>http://doc.nuxeo.com/</home-page>
   <vendor>Nuxeo</vendor>
