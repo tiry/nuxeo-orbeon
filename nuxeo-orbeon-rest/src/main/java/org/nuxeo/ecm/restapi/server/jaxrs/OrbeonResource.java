@@ -2,8 +2,10 @@ package org.nuxeo.ecm.restapi.server.jaxrs;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -26,13 +28,12 @@ import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.DocumentRef;
 import org.nuxeo.ecm.core.api.PathRef;
 import org.nuxeo.ecm.core.api.UnrestrictedSessionRunner;
-import org.nuxeo.ecm.core.api.impl.blob.StringBlob;
+import org.nuxeo.ecm.core.api.impl.blob.AbstractBlob;
+import org.nuxeo.ecm.core.api.impl.blob.ByteArrayBlob;
 import org.nuxeo.ecm.core.repository.RepositoryService;
 import org.nuxeo.ecm.webengine.model.Template;
-import org.nuxeo.ecm.webengine.model.WebContext;
 import org.nuxeo.ecm.webengine.model.WebObject;
 import org.nuxeo.ecm.webengine.model.impl.DefaultObject;
-import org.nuxeo.ecm.webengine.scripting.ScriptFile;
 import org.nuxeo.runtime.api.Framework;
 
 @WebObject(type = "orbeon")
@@ -42,14 +43,14 @@ public class OrbeonResource extends DefaultObject {
 	protected static final Log log = LogFactory.getLog(OrbeonResource.class);
 
 	@GET
-	@Path("crud/{app}/{form}/data/{id}/data.xml")
-	public Object getFormData(@PathParam("app") String app, @PathParam("form") String form,
-			@PathParam("id") String id) {
+	@Path("crud/{app}/{form}/{state}/{id}/{file}")
+	public Object getFormData(@PathParam("app") String app, @PathParam("form") String form, @PathParam("state") String state,
+			@PathParam("id") String id, @PathParam("file") String file) {
 
 		//XXX Hack to bypass security
 		class UnrestrictedSessionFetcher extends UnrestrictedSessionRunner {
 			
-			protected String orbeonXML;
+			protected Blob orbeonData;
 			
 			public UnrestrictedSessionFetcher(String repository) {
 				super(repository);
@@ -57,21 +58,30 @@ public class OrbeonResource extends DefaultObject {
 			@Override
 			public void run() {
 				DocumentModel formDoc = getOrCreateFormDoc(session, app, form, id, false);
-				orbeonXML = mapNuxeoDocumentToOrbeonData(formDoc);
+				orbeonData = mapNuxeoDocumentToOrbeonData(formDoc, file);
 				session.save();
 			}
 		}
 		UnrestrictedSessionFetcher fetcher = new UnrestrictedSessionFetcher(getRepositoryName());		
 		fetcher.runUnrestricted();
 
-		return Response.status(Status.OK).entity(fetcher.orbeonXML).build();
+		if (fetcher.orbeonData == null) {
+		  return Response.status(Status.NOT_FOUND);
+		}
+		try {
+          return Response.status(Status.OK).type(fetcher.orbeonData.getMimeType())
+              .entity(fetcher.orbeonData.getStream()).build();
+        } catch (IOException e) {
+          log.error("Error retreving document", e);
+          return Response.serverError();
+        }
 
 	}
 
 	@PUT
-	@Path("crud/{app}/{form}/data/{id}/data.xml")
-	public Response createUpdateFormData(@PathParam("app") String app, @PathParam("form") String form,
-			@PathParam("id") String id) throws Exception {
+	@Path("crud/{app}/{form}/{state}/{id}/{file}")
+	public Response createUpdateFormData(@PathParam("app") String app, @PathParam("form") String form, @PathParam("state") String state,
+			@PathParam("id") String id, @PathParam("file") String file) throws Exception {
 
 		//XXX Hack to bypass security
 		new UnrestrictedSessionRunner(getRepositoryName()) {
@@ -79,8 +89,8 @@ public class OrbeonResource extends DefaultObject {
 			public void run() {
 				DocumentModel formDoc = getOrCreateFormDoc(session, app, form, id, true);
 
-				String orbeonXML = readBodyAsXMLString();
-				formDoc = mapOrbeonDataToNuxeoDocument(formDoc, orbeonXML);
+				ByteArrayBlob orbeonData = readBody();
+				formDoc = mapOrbeonDataToNuxeoDocument(formDoc, orbeonData, file);
 				session.save();
 			}
 		}.runUnrestricted();
@@ -92,7 +102,7 @@ public class OrbeonResource extends DefaultObject {
 	@Path("search/{app}/{form}")
 	public Object searchForm(@PathParam("app") String app, @PathParam("form") String form) throws IOException {
 
-		String orbeonXML = readBodyAsXMLString();
+	  ByteArrayBlob orbeonXML = readBody();
 		
 		System.out.println(orbeonXML);
 		
@@ -128,18 +138,14 @@ public class OrbeonResource extends DefaultObject {
 		return template;		
 	}
 
-	protected String readBodyAsXMLString() {
-		String orbeonXML = null;
-		try {
-			InputStream xmlStream = ctx.getRequest().getInputStream();
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(xmlStream, writer, "UTF-8");
-			orbeonXML = writer.toString();
-
+	protected ByteArrayBlob readBody() {
+		try (InputStream stream = ctx.getRequest().getInputStream()) {
+			byte[] body = IOUtils.toByteArray(stream);
+			return new ByteArrayBlob(body);
 		} catch (Exception e) {
-			log.error("Unable to read XML payload", e);
+			log.error("Unable to read payload", e);
+			throw new RuntimeException(e);
 		}
-		return orbeonXML;
 	}
 	
 	protected String getRepositoryName() {
@@ -147,25 +153,39 @@ public class OrbeonResource extends DefaultObject {
 		return Framework.getService(RepositoryService.class).getRepositoryNames().get(0);
 	}
 
-	protected DocumentModel mapOrbeonDataToNuxeoDocument(DocumentModel formDoc, String orbeonXML) {
-
-		StringBlob blob = new StringBlob(orbeonXML);
-		blob.setFilename("data.xml");
-		blob.setMimeType("application/xml");
-
-		formDoc.setPropertyValue("file:content", blob);
+	protected DocumentModel mapOrbeonDataToNuxeoDocument(DocumentModel formDoc, AbstractBlob blob, String filename) {
+		blob.setFilename(filename);
+		if ("data.xml".equals(filename)) {
+		  blob.setMimeType("application/xml");
+		  formDoc.setPropertyValue("file:content", blob);
+		} else {
+		  blob.setMimeType("application/octect-stream");
+          List<Map<String, Object>> existingBlobs = (List<Map<String, Object>>) formDoc.getPropertyValue("files:files");
+          if (existingBlobs == null) {
+            existingBlobs = new ArrayList<>();
+          }
+          Map<String, Object> map = new HashMap<>();
+          map.put("file", blob);
+          existingBlobs.add(map);
+          formDoc.setPropertyValue("files:files", (Serializable) existingBlobs);
+		}
+		
 		return formDoc.getCoreSession().saveDocument(formDoc);
 	}
 
-	protected String mapNuxeoDocumentToOrbeonData(DocumentModel formDoc) {
-
-		Blob blob = (Blob) formDoc.getPropertyValue("file:content");	
-		try {
-			return blob.getString();
-		} catch (Exception e) {
-			log.error("Unable to read Orbeon data from blob", e);
-			return "";
-		}
+	protected Blob mapNuxeoDocumentToOrbeonData(DocumentModel formDoc, String filename) {
+	    if ("data.xml".equals(filename)) {
+	      Blob blob = (Blob) formDoc.getPropertyValue("file:content");
+	      return blob;
+	    }
+	    List<Map<String, Object>> existingBlobs = (List<Map<String, Object>>) formDoc.getPropertyValue("files:files");
+	    for (Map<String, Object> map : existingBlobs) {
+	      Blob bin = (Blob) map.get("file");
+	      if (filename.equals(bin.getFilename())) {
+	        return bin;
+	      }
+	    }
+	    return null;
 	}
 
 	protected DocumentModel getOrCreateAppRoot(CoreSession session, String app, boolean create) {
