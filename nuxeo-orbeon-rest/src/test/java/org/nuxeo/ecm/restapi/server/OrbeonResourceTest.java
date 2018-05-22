@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import javax.ws.rs.core.Response;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nuxeo.ecm.core.api.CoreSession;
@@ -73,7 +72,6 @@ public class OrbeonResourceTest extends BaseTest{
     }
 
     @Test
-    @Ignore("Datetime not being formatted correctly in test")
     public void shouldCreateAndSearchForm() throws Exception {
 
     	resource = getServiceFor(REST_API_URL, "Administrator", "Administrator");
