@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -23,7 +22,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -96,8 +94,7 @@ public class OrbeonResource extends DefaultObject {
     @PUT
     @Path("crud/{app}/{form}/{state}/{id}/{file}")
     public Response createUpdateFormData(@PathParam("app") String app, @PathParam("form") String form,
-            @PathParam("state") String state, @PathParam("id") String id, @PathParam("file") String file,
-            @HeaderParam("content-type") String contentType) throws Exception {
+            @PathParam("state") String state, @PathParam("id") String id, @PathParam("file") String file) throws Exception {
 
         // XXX Hack to bypass security
         new UnrestrictedSessionRunner(getRepositoryName()) {
@@ -107,7 +104,7 @@ public class OrbeonResource extends DefaultObject {
 
                 ByteArrayBlob orbeonData = readBody();
                 log.debug("Storing file: " + file);
-                mapOrbeonDataToNuxeoDocument(formDoc, orbeonData, file, contentType);
+                mapOrbeonDataToNuxeoDocument(formDoc, orbeonData, file);
                 session.save();
             }
         }.runUnrestricted();
@@ -208,21 +205,13 @@ public class OrbeonResource extends DefaultObject {
         return Framework.getService(RepositoryService.class).getRepositoryNames().get(0);
     }
 
-    protected DocumentModel mapOrbeonDataToNuxeoDocument(DocumentModel formDoc, AbstractBlob blob, String filename,
-            String contentType) {
+    protected DocumentModel mapOrbeonDataToNuxeoDocument(DocumentModel formDoc, AbstractBlob blob, String filename) {
         blob.setFilename(filename);
         if (FORM_XML.equals(filename)) {
-            if (StringUtils.isBlank(contentType)) {
-                contentType = "application/xml";
-            }
-            blob.setMimeType(contentType);
+            blob.setMimeType("application/xml");
             formDoc.setPropertyValue("file:content", blob);
         } else {
-            // If Orbeon doesn't know a content type, it uses '???' apparently
-            if (StringUtils.isBlank(contentType) || "???".equals(contentType)) {
-                contentType = "application/octet-stream";
-            }
-            blob.setMimeType(contentType);
+            blob.setMimeType("application/octet-stream");
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> existingBlobs = (List<Map<String, Object>>) formDoc.getPropertyValue(
                     "files:files");
