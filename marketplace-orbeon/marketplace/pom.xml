@@ -4,10 +4,11 @@
   <parent>
     <groupId>org.nuxeo.ecm.platform</groupId>
     <artifactId>marketplace-nuxeo-orbeon-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>10.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>marketplace-nuxeo-orbeon</artifactId>
+  <version>10.1-SNAPSHOT</version>
   <packaging>zip</packaging>
   <name>Nuxeo Orbeon - Nuxeo package</name>
 

@@ -6,12 +6,12 @@
 		point="openUrl">
 		<openUrl name="orbeonPersistence">
 			<!-- api/v1/orbeon/crud/Nuxeo/Simple/data/cd712b23ab283ac9fe3905997ad854f01941f7b4/data.xml? -->
-			<grantPattern>${org.nuxeo.ecm.contextPath}/api/v1/orbeon/crud/.*/.*/data/.*/data.xml.*
+			<grantPattern>${org.nuxeo.ecm.contextPath}/api/v1/orbeon/crud/.*/.*/.*/.*/.*
 			</grantPattern>
 		</openUrl>
 		<openUrl name="orbeonPersistenceSite">
 			<!-- api/v1/orbeon/crud/Nuxeo/Simple/data/cd712b23ab283ac9fe3905997ad854f01941f7b4/data.xml? -->
-			<grantPattern>${org.nuxeo.ecm.contextPath}/site/api/v1/orbeon/crud/.*/.*/data/.*/data.xml.*
+			<grantPattern>${org.nuxeo.ecm.contextPath}/site/api/v1/orbeon/crud/.*/.*/.*/.*/.*
 			</grantPattern>
 		</openUrl>
 		<openUrl name="orbeonPersistenceSearch">
