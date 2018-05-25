@@ -12,7 +12,7 @@
   <groupId>org.nuxeo.orbeon</groupId>
   <artifactId>nuxeo-orbeon-parent</artifactId>
   <name>Nuxeo Orbeon Connector - parent</name>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>10.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>

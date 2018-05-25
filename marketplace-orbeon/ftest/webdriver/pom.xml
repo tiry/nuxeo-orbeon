@@ -3,13 +3,13 @@
 
   <parent>
     <groupId>org.nuxeo.ecm.platform</groupId>
-    <artifactId>marketplace-nuxeo-graphql-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <artifactId>marketplace-nuxeo-orbeon-parent</artifactId>
+    <version>10.1-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <artifactId>webdriver</artifactId>
-  <name>Nuxeo GraphQL - Nuxeo package - WebDriver</name>
+  <name>Nuxeo Orbeon - Nuxeo package - WebDriver</name>
 
   <dependencies>
     <dependency>

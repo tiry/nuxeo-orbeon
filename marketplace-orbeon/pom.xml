@@ -10,16 +10,11 @@
   <artifactId>marketplace-nuxeo-orbeon-parent</artifactId>
   <packaging>pom</packaging>
   <name>Nuxeo Orbeon - Nuxeo package - Parent</name>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>10.1-SNAPSHOT</version>
 
   <modules>
     <module>marketplace</module>
   </modules>
-
-
-  <properties>
-    <graphql.version>0.0.1-SNAPSHOT</graphql.version>
-  </properties>
 
   <profiles>
     <profile>
@@ -35,12 +30,12 @@
       <dependency>
         <groupId>org.nuxeo.orbeon</groupId>
         <artifactId>nuxeo-orbeon-core</artifactId>
-        <version>${graphql.version}</version>        
+        <version>${project.version}</version>        
       </dependency>
       <dependency>
         <groupId>org.nuxeo.orbeon</groupId>
         <artifactId>nuxeo-orbeon-rest</artifactId>
-        <version>${graphql.version}</version>        
+        <version>${project.version}</version>        
       </dependency>
     </dependencies>
   </dependencyManagement>
